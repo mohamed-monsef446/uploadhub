@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-
 import connectDB from "../../../lib/mongodb";
 import Folder from "../../../models/Folder";
+import { supabaseAdmin } from "../../../lib/supabase";
 
 export async function POST(req: Request) {
   try {
@@ -13,21 +11,11 @@ export async function POST(req: Request) {
     const paths = data.getAll("paths") as string[];
 
     const userId = data.get("userId")?.toString() || null;
-
-    const capsuleName =
-      data.get("capsuleName")?.toString() || "Untitled Capsule";
-
-    const description =
-      data.get("description")?.toString() || "";
-
-    const icon =
-      data.get("icon")?.toString() || "📦";
-
-    const color =
-      data.get("color")?.toString() || "purple";
-
+    const capsuleName = data.get("capsuleName")?.toString() || "Untitled Capsule";
+    const description = data.get("description")?.toString() || "";
+    const icon = data.get("icon")?.toString() || "📦";
+    const color = data.get("color")?.toString() || "purple";
     const expiryDays = Number(data.get("expiryDays") || (userId ? 30 : 3));
-
     const downloadLimit = Number(data.get("downloadLimit") || 0);
 
     if (!files || files.length === 0) {
@@ -38,22 +26,30 @@ export async function POST(req: Request) {
     }
 
     const folderId = Date.now().toString();
-    const rootUploadDir = path.join(process.cwd(), "uploads", folderId);
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const relativePath = paths[i] || file.name;
-
-      const safeRelativePath = relativePath.replace(/\\/g, "/");
-      const fullPath = path.join(rootUploadDir, safeRelativePath);
-
-      const dirName = path.dirname(fullPath);
-      await mkdir(dirName, { recursive: true });
+      const relativePath = (paths[i] || file.name).replace(/\\/g, "/");
+      const storagePath = `${folderId}/${relativePath}`;
 
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      await writeFile(fullPath, buffer);
+      const { error } = await supabaseAdmin.storage
+        .from("uploads")
+        .upload(storagePath, buffer, {
+          contentType: file.type || "application/octet-stream",
+          upsert: true,
+        });
+
+      if (error) {
+        console.error("Supabase upload error:", error);
+        return NextResponse.json({
+          success: false,
+          message: "Upload to storage failed",
+          error: error.message,
+        });
+      }
     }
 
     await connectDB();
@@ -75,6 +71,7 @@ export async function POST(req: Request) {
       downloadLimit,
       isPasswordProtected: false,
       password: "",
+      storageProvider: "supabase",
     });
 
     return NextResponse.json({
