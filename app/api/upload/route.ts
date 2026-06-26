@@ -11,7 +11,8 @@ export async function POST(req: Request) {
     const paths = data.getAll("paths") as string[];
 
     const userId = data.get("userId")?.toString() || null;
-    const capsuleName = data.get("capsuleName")?.toString() || "Untitled Capsule";
+    const capsuleName =
+      data.get("capsuleName")?.toString() || "Untitled Capsule";
     const description = data.get("description")?.toString() || "";
     const icon = data.get("icon")?.toString() || "📦";
     const color = data.get("color")?.toString() || "purple";
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
     }
 
     const folderId = Date.now().toString();
+    const uploadedFiles = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -44,12 +46,26 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Supabase upload error:", error);
+
         return NextResponse.json({
           success: false,
           message: "Upload to storage failed",
           error: error.message,
         });
       }
+
+      const { data: publicUrlData } = supabaseAdmin.storage
+        .from("uploads")
+        .getPublicUrl(storagePath);
+
+      uploadedFiles.push({
+        name: file.name,
+        path: relativePath,
+        storagePath,
+        url: publicUrlData.publicUrl,
+        size: file.size,
+        type: file.type || "application/octet-stream",
+      });
     }
 
     await connectDB();
@@ -65,13 +81,14 @@ export async function POST(req: Request) {
       icon,
       color,
       filesCount: files.length,
+      files: uploadedFiles,
+      storageProvider: "supabase",
       expiresAt,
       downloads: 0,
       views: 0,
       downloadLimit,
       isPasswordProtected: false,
       password: "",
-      storageProvider: "supabase",
     });
 
     return NextResponse.json({
