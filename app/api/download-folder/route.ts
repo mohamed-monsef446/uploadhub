@@ -1,52 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import AdmZip from "adm-zip";
-
-function addFolderToZip(zip: AdmZip, folderPath: string, zipPath = "") {
-  const items = fs.readdirSync(folderPath);
-
-  for (const item of items) {
-    const fullPath = path.join(folderPath, item);
-    const relativePath = path.join(zipPath, item);
-
-    if (fs.statSync(fullPath).isDirectory()) {
-      addFolderToZip(zip, fullPath, relativePath);
-    } else {
-      zip.addLocalFile(fullPath, path.dirname(relativePath));
-    }
-  }
-}
+import connectDB from "../../../lib/mongodb";
+import Folder from "../../../models/Folder";
+import { supabaseAdmin } from "../../../lib/supabase";
 
 export async function GET(req: NextRequest) {
-  const id = req.nextUrl.searchParams.get("id");
+  try {
+    const id = req.nextUrl.searchParams.get("id");
 
-  if (!id) {
-    return NextResponse.json(
-      { error: "Folder ID missing" },
-      { status: 400 }
-    );
+    if (!id) {
+      return NextResponse.json({ error: "Folder ID missing" }, { status: 400 });
+    }
+
+    await connectDB();
+
+    const capsule = await Folder.findOne({ folderId: id }).lean();
+
+    if (!capsule) {
+      return NextResponse.json({ error: "Capsule not found" }, { status: 404 });
+    }
+
+    const files = capsule.files || [];
+    const zip = new AdmZip();
+
+    for (const file of files) {
+      const { data, error } = await supabaseAdmin.storage
+        .from("uploads")
+        .download(file.storagePath);
+
+      if (error || !data) {
+        console.error("Supabase ZIP download error:", error);
+        continue;
+      }
+
+      const arrayBuffer = await data.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      zip.addFile(file.name || "file", buffer);
+    }
+
+    const buffer = zip.toBuffer();
+
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="${id}.zip"`,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "ZIP download failed" }, { status: 500 });
   }
-
-  const folderPath = path.join(process.cwd(), "uploads", id);
-
-  if (!fs.existsSync(folderPath)) {
-    return NextResponse.json(
-      { error: "Folder not found" },
-      { status: 404 }
-    );
-  }
-
-  const zip = new AdmZip();
-
-  addFolderToZip(zip, folderPath);
-
-  const buffer = zip.toBuffer();
-
-  return new NextResponse(buffer, {
-    headers: {
-      "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${id}.zip"`,
-    },
-  });
 }
