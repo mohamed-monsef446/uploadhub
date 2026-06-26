@@ -3,6 +3,14 @@ import connectDB from "../../../lib/mongodb";
 import Folder from "../../../models/Folder";
 import { supabaseAdmin } from "../../../lib/supabase";
 
+function getSafeFileName(fileName: string, index: number) {
+  const extension = fileName.includes(".")
+    ? fileName.split(".").pop()
+    : "file";
+
+  return `file-${index + 1}-${Date.now()}.${extension}`;
+}
+
 export async function POST(req: Request) {
   try {
     const data = await req.formData();
@@ -31,8 +39,9 @@ export async function POST(req: Request) {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const relativePath = (paths[i] || file.name).replace(/\\/g, "/");
-      const storagePath = `${folderId}/${relativePath}`;
+      const originalPath = (paths[i] || file.name).replace(/\\/g, "/");
+      const safeFileName = getSafeFileName(file.name, i);
+      const storagePath = `${folderId}/${safeFileName}`;
 
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
@@ -60,7 +69,7 @@ export async function POST(req: Request) {
 
       uploadedFiles.push({
         name: file.name,
-        path: relativePath,
+        path: originalPath,
         storagePath,
         url: publicUrlData.publicUrl,
         size: file.size,
