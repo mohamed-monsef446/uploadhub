@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import connectDB from "../../../lib/mongodb";
 import Folder from "../../../models/Folder";
 import { supabaseAdmin } from "../../../lib/supabase";
 
-function getSafeFileName(fileName: string, index: number) {
-  const extension = fileName.includes(".")
-    ? fileName.split(".").pop()
-    : "file";
-
-  return `file-${index + 1}-${Date.now()}.${extension}`;
+function getExtension(fileName: string) {
+  const ext = fileName.split(".").pop()?.toLowerCase() || "bin";
+  return /^[a-z0-9]+$/.test(ext) ? ext : "bin";
 }
 
 export async function POST(req: Request) {
@@ -19,8 +17,7 @@ export async function POST(req: Request) {
     const paths = data.getAll("paths") as string[];
 
     const userId = data.get("userId")?.toString() || null;
-    const capsuleName =
-      data.get("capsuleName")?.toString() || "Untitled Capsule";
+    const capsuleName = data.get("capsuleName")?.toString() || "Untitled Capsule";
     const description = data.get("description")?.toString() || "";
     const icon = data.get("icon")?.toString() || "📦";
     const color = data.get("color")?.toString() || "purple";
@@ -28,38 +25,38 @@ export async function POST(req: Request) {
     const downloadLimit = Number(data.get("downloadLimit") || 0);
 
     if (!files || files.length === 0) {
-      return NextResponse.json({
-        success: false,
-        message: "No files selected",
-      });
+      return NextResponse.json({ success: false, message: "No files selected" });
     }
 
-    const folderId = Date.now().toString();
+    const folderId = randomUUID();
     const uploadedFiles = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const originalPath = (paths[i] || file.name).replace(/\\/g, "/");
-      const safeFileName = getSafeFileName(file.name, i);
-      const storagePath = `${folderId}/${safeFileName}`;
 
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+      const originalPath = (paths[i] || file.name).replace(/\\/g, "/");
+      const ext = getExtension(file.name);
+
+      const storagePath = `${folderId}/${randomUUID()}.${ext}`;
+
+      console.log("UPLOAD STORAGE PATH:", storagePath);
+
+      const buffer = Buffer.from(await file.arrayBuffer());
 
       const { error } = await supabaseAdmin.storage
         .from("uploads")
         .upload(storagePath, buffer, {
           contentType: file.type || "application/octet-stream",
-          upsert: true,
+          upsert: false,
         });
 
       if (error) {
         console.error("Supabase upload error:", error);
-
         return NextResponse.json({
           success: false,
           message: "Upload to storage failed",
           error: error.message,
+          storagePath,
         });
       }
 
@@ -108,7 +105,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error(error);
-
     return NextResponse.json({
       success: false,
       message: "Upload failed",
