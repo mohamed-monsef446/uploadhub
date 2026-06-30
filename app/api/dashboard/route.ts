@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import connectDB from "../../../lib/mongodb";
 import Folder from "../../../models/Folder";
 
@@ -17,12 +16,9 @@ export async function GET(req: Request) {
 
     await connectDB();
 
-    const folders = await Folder.find({ userId }).sort({
-      createdAt: -1,
-    });
+    const folders = await Folder.find({ userId }).sort({ createdAt: -1 });
 
     const totalUploads = folders.length;
-
     const activeLinks = folders.filter(
       (folder) => new Date(folder.expiresAt) > new Date()
     ).length;
@@ -32,12 +28,24 @@ export async function GET(req: Request) {
       0
     );
 
+    const totalViews = folders.reduce(
+      (sum, folder) => sum + (folder.views || 0),
+      0
+    );
+
+    const storageUsed = folders.reduce((sum, folder) => {
+      const files = folder.files || [];
+      return sum + files.reduce((s: number, f: any) => s + (f.size || 0), 0);
+    }, 0);
+
     return NextResponse.json({
       success: true,
       stats: {
         totalUploads,
         activeLinks,
         totalDownloads,
+        totalViews,
+        storageUsed,
       },
       folders,
     });
