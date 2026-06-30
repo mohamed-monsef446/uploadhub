@@ -9,22 +9,56 @@ export async function GET(req: NextRequest) {
     const id = req.nextUrl.searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "Folder ID missing" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File ID missing" },
+        { status: 400 }
+      );
     }
 
     await connectDB();
 
-    const capsule = await Folder.findOneAndUpdate(
+    const fileData = await Folder.findOneAndUpdate(
       { folderId: id },
       { $inc: { downloads: 1 } },
       { new: true }
     ).lean();
 
-    if (!capsule) {
-      return NextResponse.json({ error: "Capsule not found" }, { status: 404 });
+    if (!fileData) {
+      return NextResponse.json(
+        { error: "File not found" },
+        { status: 404 }
+      );
     }
 
-    const files = capsule.files || [];
+    const files = fileData.files || [];
+
+    // لو ملف واحد فقط نزله مباشرة
+    if (files.length === 1) {
+      const file = files[0];
+
+      const { data, error } = await supabaseAdmin.storage
+        .from("uploads")
+        .download(file.storagePath);
+
+      if (error || !data) {
+        return NextResponse.json(
+          { error: "File download failed" },
+          { status: 500 }
+        );
+      }
+
+      const buffer = Buffer.from(await data.arrayBuffer());
+
+      return new NextResponse(buffer, {
+        headers: {
+          "Content-Type":
+            file.type || "application/octet-stream",
+          "Content-Disposition": `attachment; filename="${file.name}"`,
+        },
+      });
+    }
+
+    // أكثر من ملف -> ZIP
     const zip = new AdmZip();
 
     for (const file of files) {
@@ -32,20 +66,14 @@ export async function GET(req: NextRequest) {
         .from("uploads")
         .download(file.storagePath);
 
-      if (error || !data) {
-        console.error("Supabase ZIP download error:", error);
-        continue;
-      }
+      if (error || !data) continue;
 
-      const arrayBuffer = await data.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      const buffer = Buffer.from(await data.arrayBuffer());
 
-      zip.addFile(file.name || "file", buffer);
+      zip.addFile(file.name, buffer);
     }
 
-    const buffer = zip.toBuffer();
-
-    return new NextResponse(buffer, {
+    return new NextResponse(zip.toBuffer(), {
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="${id}.zip"`,
@@ -53,32 +81,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "ZIP download failed" }, { status: 500 });
-  }
-}
-        .download(file.storagePath);
 
-      if (error || !data) {
-        console.error("Supabase ZIP download error:", error);
-        continue;
-      }
-
-      const arrayBuffer = await data.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      zip.addFile(file.name || "file", buffer);
-    }
-
-    const buffer = zip.toBuffer();
-
-    return new NextResponse(buffer, {
-      headers: {
-        "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${id}.zip"`,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "ZIP download failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Download failed" },
+      { status: 500 }
+    );
   }
 }
