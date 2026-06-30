@@ -1,4 +1,4 @@
-use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -584,50 +584,50 @@ export default function Home() {
             )}
           </div>
         </div>
-<div className="hidden lg:block">
-  <p className="mb-4 text-sm font-black uppercase tracking-[0.35em] text-blue-600">
-    UploadHub
-  </p>
 
-  <h2 className="max-w-4xl text-7xl font-black leading-[0.92] tracking-tight text-slate-950 xl:text-8xl">
-    Send large files in seconds.
-  </h2>
+        <div className="hidden lg:block">
+          <p className="mb-4 text-sm font-black uppercase tracking-[0.35em] text-blue-600">
+            UploadHub
+          </p>
 
-  <p className="mt-8 max-w-2xl text-xl font-medium leading-8 text-slate-600">
-    Upload documents, folders, images, videos, and business files.
-    Share them instantly with clean links, previews, downloads, and tracking.
-  </p>
+          <h2 className="max-w-4xl text-7xl font-black leading-[0.92] tracking-tight text-slate-950 xl:text-8xl">
+            Send large files in seconds.
+          </h2>
 
-  <div className="mt-10 grid max-w-2xl grid-cols-3 gap-4">
-    <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
-      <p className="text-3xl">⚡</p>
-      <p className="mt-4 font-black">Fast</p>
-      <p className="text-sm text-slate-500">Live upload progress</p>
-    </div>
+          <p className="mt-8 max-w-2xl text-xl font-medium leading-8 text-slate-600">
+            Upload documents, folders, images, videos, and business files. Share them instantly with clean links, previews, downloads, and tracking.
+          </p>
 
-    <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
-      <p className="text-3xl">🔗</p>
-      <p className="mt-4 font-black">Share</p>
-      <p className="text-sm text-slate-500">One secure link</p>
-    </div>
+          <div className="mt-10 grid max-w-2xl grid-cols-3 gap-4">
+            <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
+              <p className="text-3xl">⚡</p>
+              <p className="mt-4 font-black">Fast</p>
+              <p className="text-sm text-slate-500">Live progress</p>
+            </div>
 
-    <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
-      <p className="text-3xl">📊</p>
-      <p className="mt-4 font-black">Track</p>
-      <p className="text-sm text-slate-500">Views & downloads</p>
-    </div>
-  </div>
+            <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
+              <p className="text-3xl">🔗</p>
+              <p className="mt-4 font-black">Share</p>
+              <p className="text-sm text-slate-500">One secure link</p>
+            </div>
 
-  <div className="mt-10 rounded-[36px] border border-slate-950 bg-slate-950 p-7 text-white shadow-2xl">
-    <p className="text-sm font-black uppercase tracking-[0.25em] text-blue-300">
-      Ready to send
-    </p>
-    <p className="mt-3 text-2xl font-black">
-      Add files, transfer, copy the link — done.
-    </p>
-  </div>
-</div>
-</section>
-</main>
-);
+            <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
+              <p className="text-3xl">📊</p>
+              <p className="mt-4 font-black">Track</p>
+              <p className="text-sm text-slate-500">Views & downloads</p>
+            </div>
+          </div>
+
+          <div className="mt-10 rounded-[36px] border border-slate-950 bg-slate-950 p-7 text-white shadow-2xl">
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-blue-300">
+              Ready to send
+            </p>
+            <p className="mt-3 text-2xl font-black">
+              Add files, transfer, copy the link — done.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }
