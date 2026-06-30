@@ -17,7 +17,8 @@ export async function POST(req: Request) {
     const paths = data.getAll("paths") as string[];
 
     const userId = data.get("userId")?.toString() || null;
-    const capsuleName = data.get("capsuleName")?.toString() || "Untitled Capsule";
+    const capsuleName =
+      data.get("capsuleName")?.toString() || "Untitled Capsule";
     const description = data.get("description")?.toString() || "";
     const icon = data.get("icon")?.toString() || "📦";
     const color = data.get("color")?.toString() || "purple";
@@ -25,7 +26,10 @@ export async function POST(req: Request) {
     const downloadLimit = Number(data.get("downloadLimit") || 0);
 
     if (!files || files.length === 0) {
-      return NextResponse.json({ success: false, message: "No files selected" });
+      return NextResponse.json({
+        success: false,
+        message: "No files selected",
+      });
     }
 
     const folderId = randomUUID();
@@ -36,7 +40,6 @@ export async function POST(req: Request) {
 
       const originalPath = (paths[i] || file.name).replace(/\\/g, "/");
       const ext = getExtension(file.name);
-
       const storagePath = `${folderId}/${randomUUID()}.${ext}`;
 
       console.log("UPLOAD STORAGE PATH:", storagePath);
@@ -52,6 +55,7 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Supabase upload error:", error);
+
         return NextResponse.json({
           success: false,
           message: "Upload to storage failed",
@@ -78,7 +82,9 @@ export async function POST(req: Request) {
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiryDays);
-console.log("Saving folder:", folderId);console.log("Folder saved successfully");
+
+    console.log("Saving folder:", folderId);
+
     await Folder.create({
       folderId,
       userId,
@@ -97,6 +103,8 @@ console.log("Saving folder:", folderId);console.log("Folder saved successfully")
       password: "",
     });
 
+    console.log("Folder saved successfully:", folderId);
+
     return NextResponse.json({
       success: true,
       message: "Capsule uploaded successfully",
@@ -104,7 +112,8 @@ console.log("Saving folder:", folderId);console.log("Folder saved successfully")
       url: `/folder/${folderId}`,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Upload failed:", error);
+
     return NextResponse.json({
       success: false,
       message: "Upload failed",
