@@ -31,7 +31,11 @@ export default async function FolderPage({
 
   await connectDB();
 
-  const capsule = await Folder.findOne({ folderId: id }).lean();
+  const capsule = await Folder.findOneAndUpdate(
+  { folderId: id },
+  { $inc: { views: 1 } },
+  { new: true }
+).lean();
 
   console.log("Opening folder:", id);
   console.log("Capsule found:", !!capsule);
