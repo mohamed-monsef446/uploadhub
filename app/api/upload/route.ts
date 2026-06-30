@@ -78,7 +78,7 @@ export async function POST(req: Request) {
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiryDays);
-
+console.log("Saving folder:", folderId);console.log("Folder saved successfully");
     await Folder.create({
       folderId,
       userId,
