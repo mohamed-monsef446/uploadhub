@@ -4,15 +4,22 @@ import connectDB from "../../../lib/mongodb";
 import Folder from "../../../models/Folder";
 import { supabaseAdmin } from "../../../lib/supabase";
 
+function safeAsciiName(name: string) {
+  return name.replace(/[^\x20-\x7E]/g, "_");
+}
+
+function contentDisposition(filename: string) {
+  return `attachment; filename="${safeAsciiName(
+    filename
+  )}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json(
-        { error: "File ID missing" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "File ID missing" }, { status: 400 });
     }
 
     await connectDB();
@@ -24,15 +31,11 @@ export async function GET(req: NextRequest) {
     ).lean();
 
     if (!fileData) {
-      return NextResponse.json(
-        { error: "File not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
     const files = fileData.files || [];
 
-    // لو ملف واحد فقط نزله مباشرة
     if (files.length === 1) {
       const file = files[0];
 
@@ -51,14 +54,12 @@ export async function GET(req: NextRequest) {
 
       return new NextResponse(buffer, {
         headers: {
-          "Content-Type":
-            file.type || "application/octet-stream",
-          "Content-Disposition": `attachment; filename="${file.name}"`,
+          "Content-Type": file.type || "application/octet-stream",
+          "Content-Disposition": contentDisposition(file.name || "file"),
         },
       });
     }
 
-    // أكثر من ملف -> ZIP
     const zip = new AdmZip();
 
     for (const file of files) {
@@ -69,22 +70,20 @@ export async function GET(req: NextRequest) {
       if (error || !data) continue;
 
       const buffer = Buffer.from(await data.arrayBuffer());
-
-      zip.addFile(file.name, buffer);
+      zip.addFile(file.name || "file", buffer);
     }
+
+    const zipName = `${id}.zip`;
 
     return new NextResponse(zip.toBuffer(), {
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${id}.zip"`,
+        "Content-Disposition": contentDisposition(zipName),
       },
     });
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Download failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Download failed" }, { status: 500 });
   }
 }
