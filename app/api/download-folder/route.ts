@@ -14,7 +14,11 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
-    const capsule = await Folder.findOne({ folderId: id }).lean();
+    const capsule = await Folder.findOneAndUpdate(
+      { folderId: id },
+      { $inc: { downloads: 1 } },
+      { new: true }
+    ).lean();
 
     if (!capsule) {
       return NextResponse.json({ error: "Capsule not found" }, { status: 404 });
@@ -26,6 +30,32 @@ export async function GET(req: NextRequest) {
     for (const file of files) {
       const { data, error } = await supabaseAdmin.storage
         .from("uploads")
+        .download(file.storagePath);
+
+      if (error || !data) {
+        console.error("Supabase ZIP download error:", error);
+        continue;
+      }
+
+      const arrayBuffer = await data.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      zip.addFile(file.name || "file", buffer);
+    }
+
+    const buffer = zip.toBuffer();
+
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="${id}.zip"`,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "ZIP download failed" }, { status: 500 });
+  }
+}
         .download(file.storagePath);
 
       if (error || !data) {

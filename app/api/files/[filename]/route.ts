@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import connectDB from "../../../../lib/mongodb";
+import Folder from "../../../../models/Folder";
 import { supabaseAdmin } from "../../../../lib/supabase";
 
 export async function GET(
@@ -12,6 +14,17 @@ export async function GET(
     const url = new URL(req.url);
     const download = url.searchParams.get("download") === "1";
     const originalName = url.searchParams.get("name") || "file";
+
+    if (download) {
+      const folderId = storagePath.split("/")[0];
+
+      await connectDB();
+
+      await Folder.findOneAndUpdate(
+        { folderId },
+        { $inc: { downloads: 1 } }
+      );
+    }
 
     const { data, error } = await supabaseAdmin.storage
       .from("uploads")
