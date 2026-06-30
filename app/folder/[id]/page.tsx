@@ -4,6 +4,9 @@ import CapsuleStats from "@/components/capsule/CapsuleStats";
 import connectDB from "../../../lib/mongodb";
 import Folder from "../../../models/Folder";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function formatBytes(bytes: number) {
   if (!bytes) return "0 Bytes";
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -30,6 +33,9 @@ export default async function FolderPage({
 
   const capsule = await Folder.findOne({ folderId: id }).lean();
 
+  console.log("Opening folder:", id);
+  console.log("Capsule found:", !!capsule);
+
   if (!capsule) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-8">
@@ -53,9 +59,14 @@ export default async function FolderPage({
   }
 
   const files = capsule.files || [];
-  const totalSize = files.reduce((sum: number, file: any) => sum + (file.size || 0), 0);
+  const totalSize = files.reduce(
+    (sum: number, file: any) => sum + (file.size || 0),
+    0
+  );
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "https://uploadhub-teal.vercel.app";
+
   const shareLink = `${appUrl}/folder/${id}`;
   const capsuleName = capsule.capsuleName || `Capsule ${id.slice(-6)}`;
 
@@ -83,9 +94,7 @@ export default async function FolderPage({
               <h1 className="text-3xl font-black text-slate-900">
                 Upload Hub
               </h1>
-              <p className="text-sm text-slate-500">
-                Smart Transfer Capsules
-              </p>
+              <p className="text-sm text-slate-500">Smart Transfer Capsules</p>
             </div>
           </a>
 
@@ -225,7 +234,8 @@ export default async function FolderPage({
               <div className="bg-slate-900 text-white rounded-3xl p-6">
                 <h3 className="text-2xl font-black mb-5">🛡 Capsule Trust</h3>
                 <p className="text-white/70">
-                  Files are stored securely in Supabase Storage and shared through this capsule link.
+                  Files are stored securely in Supabase Storage and shared
+                  through this capsule link.
                 </p>
               </div>
             </div>
@@ -237,8 +247,13 @@ export default async function FolderPage({
 
               <div className="space-y-3">
                 {files.map((file: any, index: number) => {
-                  const openUrl = `/api/files/${encodeURIComponent(file.storagePath)}`;
-                  const downloadUrl = `${openUrl}?download=1&name=${encodeURIComponent(file.name)}`;
+                  const openUrl = `/api/files/${encodeURIComponent(
+                    file.storagePath
+                  )}`;
+
+                  const downloadUrl = `${openUrl}?download=1&name=${encodeURIComponent(
+                    file.name
+                  )}`;
 
                   return (
                     <div
