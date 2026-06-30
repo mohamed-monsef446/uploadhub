@@ -218,7 +218,7 @@ export default function Home() {
           setFolderId(data.folderId || "");
           setProgress(100);
           setUploadedBytes(totalBytes);
-          setMessage("Upload completed successfully.");
+          setMessage("");
         } else {
           setMessage(data.error || data.message || "Upload failed.");
         }
@@ -506,11 +506,11 @@ export default function Home() {
                 </div>
 
                 <h2 className="text-center text-3xl font-black">
-                  Transfer complete
+                  Upload completed
                 </h2>
 
                 <p className="mt-2 text-center text-sm font-medium text-slate-500">
-                  Your files are ready to share.
+                  Your file link is ready to share.
                 </p>
 
                 <div className="mt-6 rounded-[28px] border border-slate-950 bg-slate-50 p-4">
@@ -595,14 +595,16 @@ export default function Home() {
           </h2>
 
           <p className="mt-8 max-w-2xl text-xl font-medium leading-8 text-slate-600">
-            Upload documents, folders, images, videos, and business files. Share them instantly with clean links, previews, downloads, and tracking.
+            Upload documents, folders, images, videos, and business files.
+            Share them instantly with clean links, previews, downloads, and
+            tracking.
           </p>
 
           <div className="mt-10 grid max-w-2xl grid-cols-3 gap-4">
             <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
               <p className="text-3xl">⚡</p>
               <p className="mt-4 font-black">Fast</p>
-              <p className="text-sm text-slate-500">Live progress</p>
+              <p className="text-sm text-slate-500">Live upload progress</p>
             </div>
 
             <div className="rounded-3xl border border-slate-950 bg-white/80 p-5 shadow-sm">
