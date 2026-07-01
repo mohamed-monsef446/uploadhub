@@ -46,37 +46,66 @@ export async function POST(req: Request) {
         reply_to: fromEmail,
         subject: title,
         html: `
-          <div style="font-family:Arial,sans-serif;padding:30px;max-width:600px;margin:auto">
-              <h2>📁 Files shared with you</h2>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
 
-              <p><strong>${fromEmail}</strong> shared files with you using UploadHub.</p>
+<body style="margin:0;padding:40px;background:#f6f6f6;font-family:Arial">
 
-              <p>This transfer expires in <strong>${expiresIn}</strong>.</p>
+<div style="max-width:600px;margin:auto;background:white;border-radius:18px;padding:35px">
 
-              <p style="margin:35px 0">
-                  <a href="${link}"
-                     style="
-                        background:#2563eb;
-                        color:white;
-                        padding:14px 22px;
-                        text-decoration:none;
-                        border-radius:12px;
-                        font-weight:bold;
-                        display:inline-block;">
-                      Open Files
-                  </a>
-              </p>
+<h2 style="margin-top:0">
+📁 Files shared with you
+</h2>
 
-              <p style="font-size:13px;color:#666">
-                  ${link}
-              </p>
+<p>
+<b>${fromEmail}</b> shared files with you using UploadHub.
+</p>
 
-              <hr>
+<p>
+This transfer expires in
+<b>${expiresIn}</b>.
+</p>
 
-              <p style="font-size:12px;color:#999">
-                  Powered by UploadHub
-              </p>
-          </div>
+<p style="margin:35px 0">
+
+<a
+href="${link}"
+style="
+background:#2563eb;
+color:white;
+padding:15px 25px;
+text-decoration:none;
+border-radius:12px;
+display:inline-block;
+font-weight:bold;
+">
+
+Open Files
+
+</a>
+
+</p>
+
+<p style="font-size:13px;color:#666;word-break:break-all">
+${link}
+</p>
+
+<hr>
+
+<p style="font-size:12px;color:#999">
+
+Powered by UploadHub
+
+</p>
+
+</div>
+
+</body>
+
+</html>
         `,
       }),
     });
@@ -87,6 +116,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
+          message: data?.message || "Email provider failed",
           error: data,
         },
         { status: 500 }
@@ -95,6 +125,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      message: "Email sent successfully",
     });
   } catch (err) {
     console.error(err);
@@ -102,6 +133,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
+        message: "Email failed",
       },
       { status: 500 }
     );
