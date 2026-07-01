@@ -21,11 +21,13 @@ export default function CapsuleStats({
 
       <div className="bg-green-50 border border-green-200 rounded-3xl p-6">
         <p className="text-green-700 font-bold">Security</p>
-        <h3 className="text-2xl font-black mt-3 text-green-700">Private</h3>
+        <h3 className="text-2xl font-black mt-3 text-green-700">
+          Private
+        </h3>
       </div>
 
       <div className="bg-purple-50 border border-purple-200 rounded-3xl p-6">
-        <p className="text-purple-700 font-bold">Capsule ID</p>
+        <p className="text-purple-700 font-bold">File ID</p>
         <h3 className="text-xl font-black mt-4 text-purple-700">
           #{capsuleId.slice(-6)}
         </h3>

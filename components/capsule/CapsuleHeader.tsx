@@ -7,17 +7,13 @@ export default function CapsuleHeader({
 }) {
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-10 text-white">
-
-      <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10 blur-3xl"></div>
-
-      <div className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-white/10 blur-3xl"></div>
+      <div className="absolute -right-20 -top-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+      <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
 
       <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-
         <div>
-
           <p className="text-white/80 font-bold mb-2">
-            Smart Transfer Capsule
+            Smart File Transfer
           </p>
 
           <h2 className="text-5xl font-black mb-3">
@@ -25,20 +21,17 @@ export default function CapsuleHeader({
           </h2>
 
           <p className="text-white/80 max-w-2xl">
-            A private capsule for sharing files securely with Upload Hub.
+            A private file link for sharing files securely with Upload Hub.
           </p>
-
         </div>
 
         <a
           href={`/api/download-folder?id=${id}`}
-          className="bg-white text-blue-700 px-8 py-4 rounded-2xl font-black shadow-lg hover:scale-105 active:scale-95 transition"
+          className="bg-white text-blue-700 px-8 py-5 rounded-3xl font-black shadow-lg hover:scale-105 active:scale-95 transition"
         >
           ⬇ Download All
         </a>
-
       </div>
-
     </div>
   );
 }
