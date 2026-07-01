@@ -122,35 +122,15 @@ export default function Home() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const sendEmail = async (link: string, id: string) => {
-    setEmailStatus("Sending email...");
+  const openEmailDraft = (link: string) => {
+    if (!emailTo) return;
 
-    try {
-      const res = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: emailTo,
-          fromEmail: emailFrom,
-          title: transferTitle || fileLabel(selectedFiles),
-          link,
-          folderId: id,
-          expiresIn: user ? "30 days" : "3 days",
-        }),
-      });
+    const subject = encodeURIComponent(transferTitle || "Files shared with you");
+    const body = encodeURIComponent(
+      `Hello,\n\n${emailFrom || "Someone"} shared files with you using UploadHub.\n\n${link}\n\nThis link expires in ${user ? "30 days" : "3 days"}.\n\nUploadHub`
+    );
 
-      const data = await res.json();
-
-      if (data.success) {
-        setEmailStatus("Email sent successfully.");
-      } else {
-        setEmailStatus(data.message || "Email not sent. Copy the link manually.");
-      }
-    } catch {
-      setEmailStatus("Email service failed. Copy the link manually.");
-    }
+    window.location.href = `mailto:${emailTo}?subject=${subject}&body=${body}`;
   };
 
   const uploadFiles = () => {
@@ -210,7 +190,7 @@ export default function Home() {
           setUploadedBytes(totalBytes);
           localStorage.setItem("uploadhub_last_link", finalLink);
           localStorage.setItem("uploadhub_last_id", data.folderId || "");
-          await sendEmail(finalLink, data.folderId || "");
+          setTimeout(() => openEmailDraft(finalLink), 600);
         } else {
           setMessage(data.error || data.message || "Upload failed.");
         }
@@ -348,7 +328,7 @@ export default function Home() {
                 <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-5xl">✓</div>
 
                 <h2 className="text-2xl font-black">Email ready</h2>
-                <p className="mt-1 text-sm font-bold text-slate-500">{emailStatus || "Link is ready."}</p>
+                <p className="mt-1 text-sm font-bold text-slate-500">A mail draft opened with your link.</p>
 
                 <div className="mt-4 rounded-2xl border bg-slate-50 p-3">
                   <p className="truncate text-xs font-black text-blue-700">{shareLink}</p>
