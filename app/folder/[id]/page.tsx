@@ -33,7 +33,7 @@ function getFileIcon(fileName: string) {
   return "📄";
 }
 
-export default async function FilePage({
+export default async function FolderPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -42,13 +42,13 @@ export default async function FilePage({
 
   await connectDB();
 
-  const fileDoc: any = await Folder.findOneAndUpdate(
+  const sharedFile: any = await Folder.findOneAndUpdate(
     { folderId: id },
     { $inc: { views: 1 } },
     { new: true }
   ).lean();
 
-  if (!fileDoc) {
+  if (!sharedFile) {
     return (
       <main className="min-h-screen bg-[#f6f6f2] flex items-center justify-center p-8">
         <div className="bg-white rounded-[32px] shadow-xl border border-slate-200 p-10 text-center max-w-md">
@@ -73,18 +73,21 @@ export default async function FilePage({
     );
   }
 
-  const files = fileDoc.files || [];
+  const files = sharedFile.files || [];
+
   const totalSize = files.reduce(
     (sum: number, file: any) => sum + (file.size || 0),
     0
   );
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://uploadhub.vercel.app";
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "https://uploadhub.vercel.app";
+
   const shareLink = `${appUrl}/folder/${id}`;
 
-  const fileName =
-    fileDoc.capsuleName && fileDoc.capsuleName !== "Untitled Capsule"
-      ? fileDoc.capsuleName
+  const fileTitle =
+    sharedFile.capsuleName && sharedFile.capsuleName !== "Untitled Capsule"
+      ? sharedFile.capsuleName
       : files.length === 1
       ? files[0].name
       : "Untitled File";
@@ -114,9 +117,7 @@ export default async function FilePage({
               <h1 className="text-3xl font-black text-slate-950">
                 Upload Hub
               </h1>
-              <p className="text-sm text-slate-500">
-                Smart File Transfer
-              </p>
+              <p className="text-sm text-slate-500">Smart File Transfer</p>
             </div>
           </a>
 
@@ -145,7 +146,7 @@ export default async function FilePage({
 
                   <div>
                     <h1 className="text-5xl font-black break-all">
-                      {fileName}
+                      {fileTitle}
                     </h1>
 
                     <p className="text-white/80 mt-3">
@@ -204,13 +205,6 @@ export default async function FilePage({
                 </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <button
-                    type="button"
-                    className="text-center bg-blue-600 text-white px-5 py-3 rounded-2xl font-black"
-                  >
-                    📋 Copy Link
-                  </button>
-
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(
                       `Files shared with you: ${shareLink}`
@@ -253,11 +247,7 @@ export default async function FilePage({
                 <p className="font-black text-slate-950 mb-3">📱 Scan QR</p>
 
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 inline-block">
-                  <img
-                    src={qrUrl}
-                    alt="File QR Code"
-                    className="w-44 h-44"
-                  />
+                  <img src={qrUrl} alt="File QR Code" className="w-44 h-44" />
                 </div>
               </div>
             </div>
@@ -330,19 +320,21 @@ export default async function FilePage({
                 <div className="mt-6 space-y-3 text-sm">
                   <div className="flex justify-between border-b border-white/10 pb-3">
                     <span className="text-white/60">Views</span>
-                    <span className="font-black">{fileDoc.views || 0}</span>
+                    <span className="font-black">{sharedFile.views || 0}</span>
                   </div>
 
                   <div className="flex justify-between border-b border-white/10 pb-3">
                     <span className="text-white/60">Downloads</span>
-                    <span className="font-black">{fileDoc.downloads || 0}</span>
+                    <span className="font-black">
+                      {sharedFile.downloads || 0}
+                    </span>
                   </div>
 
                   <div className="flex justify-between">
                     <span className="text-white/60">Expires</span>
                     <span className="font-black">
-                      {fileDoc.expiresAt
-                        ? new Date(fileDoc.expiresAt).toLocaleDateString()
+                      {sharedFile.expiresAt
+                        ? new Date(sharedFile.expiresAt).toLocaleDateString()
                         : "Not set"}
                     </span>
                   </div>
